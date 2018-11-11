@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tutorial</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://github.com/navermaps/maps.js/tree/master/docs/js/examples-base.js"></script>
+    <script type="text/javascript" src="https://github.com/navermaps/maps.js/blob/master/docs/js/highlight.min.js"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?clientId=JlgxbAEJ2OnDvvJgxkLL&amp;submodules=panorama"></script>
+    <link rel="stylesheet" type="text/css" href="https://github.com/navermaps/maps.js/blob/master/docs/js/examples-base.js" />
+    <style type="text/css">
+
+      div#map{
+        width:48%;
+        height:460px;
+        float:left;
+        border: 3px dotted black;
+        margin-right: 10px;
+
+      }
+      #gps{
+        width:24%;
+        height:230px;
+        float:left;
+        border: 3px black;
+        border-style: double;
+        border-radius: 7px 0px 0px 7px;
+        padding-left:10px;
+
+      }
+
+      #control{
+        width:23%;
+        height:230px;
+        float:left;
+        border-top:3px double black;
+        border-bottom:3px double black;
+        border-right:3px double black;
+        border-radius: 0px 7px 7px 0px;
+        padding-left: 10px;
+
+      }
+
+      #radiobtn{
+        width:24%;
+        float:right;
+        height:230px;
+        border-top:3px double black;
+        border-bottom:3px double black;
+        border-right:3px double black;
+        border-radius: 0px 7px 7px 0px;
+        padding-left: 10px;
+      }
+      #btn1{
+        width:23%;
+        height:230px;
+        float:right;
+        border:3px double black;
+        border-radius: 7px 0px 0px 7px;
+        padding-left: 10px;
+
+      }
+
+
+      video#vid1{
+        width:48%;
+        height:460px;
+        float:right;
+        border: 3px dotted black;
+
+      }
+      input#temp{
+        width:30px;
+        text-align:right;
+        border-style:none;
+      }
+
+      #wind{
+        width:30px;
+        text-align:right;
+        border-style:none;
+      }
+      #spd{
+        height:30px;
+        width:30px;
+        border-style:none;
+      }
+      #p{
+        width:70px;
+      }
+      meter#battery{
+        width:100px;
+        height:20px;
+      }
+
+      canvas#cav1{
+        border:1px solid black;
+      }
+      #cav2{
+        border:1px solid black;
+      }
+
+
+      .invisible{
+        clear: node;
+        border: 0px none;
+        float: none;
+        background-color: transparent;
+        color: transparent;
+      }
+
+    </style>
+
+</head>
+<body>
+  <style type="text/css">
+      #wrap .buttons { position:absolute;top:0;left:0;z-index:1000;padding:5px; }
+      #wrap .buttons .control-btn { margin:0 5px 5px 0; }
+  </style>
+
+<!-- @category Map -->
+
+<div id="wrap" class="section">
+    <div id="map"></div>
+    <div class="buttons">
+        <input id="to-now" type="button" value="현재위치로 setCenter" class="control-btn" />
+        <input id="to-1" type="button" value="1레벨로 setZoom" class="control-btn" />
+    </div>
+
+    <video id="vid1" autoplay></video>
+
+
+</div>
+
+<div>
+<div id="gps">
+  <p >위도(current): <input type="text" id="lat_origin" readonly></p>
+  <p >경도(current): <input type="text" id="lng_origin" readonly></p>
+  <form action='/form_receiver' method='post'>
+    <p ><strong>위도(click): <input type="text" id="lat" name="lat" readonly></strong></p>
+    <p ><strong>경도(click): <input type="text" id="lng" name="lng" readonly></strong></p>
+    <p ><input id="button1" type="submit" value="전송" /> </p>
+  </form>
+</div>
+<div id="radiobtn">
+    <p>속도: <meter id="speed" min="1" max="7"></meter> <input id="spd" type="text" value="정지" readonly></p>
+    <p><font size=4>현재 방향:</font> <canvas id="cav1" height="20px" width="230px"></p>
+    <p><font size=4>짐벌의 방향:<font> <canvas id="cav2" height="20px" width="190px"></p>
+</div>
+
+  <div id="btn1">
+    <p >영상출력: <button id="btnn1">Start</button></p>
+    <p >영상숨기기: <button id="btnn2">Disable</button></p>
+    <p >return: <input type="text" id="return"></p>
+    <form action='/p_value' method='post'>
+      <p>p값: <input id="p" type="text" name="pval"/></p>
+      <p><input id="psub" type="submit" value="전송" /></p>
+    </form>
+  </div>
+</div>
+<div id="control">
+  <form action='/key_receiver' method='post'>
+    <p>현재 동작: <input id="text1" type="text" name="opt" readonly></p>
+    <p><input id="push" type="submit" class="invisible" value="전송" /></p>
+  </form>
+  <p>온도: <input id="temp" type="text" name="opt2" readonly>℃</p>
+  <p>풍속: <input id="wind" type="text" name="opt3" readonly>m/s</p>
+  <p>전압: <meter id="battery" min="12.4" max="16.8" low="14.2"></p>
+</div>
+
+</div>
+<script id="code">
+
+
+var map = new naver.maps.Map('map', {
+    center: new naver.maps.LatLng(37.5666805, 126.9784147),
+    zoom: 5,
+    minZoom: 1,
+    mapTypeControl:true,
+    mapTypeControlOptions:{
+      style: naver.maps.MapTypeControlStyle.BUTTON,
+      postion:naver.maps.Position.TOP_RIGHT
+    },
+    mapTypeId: naver.maps.MapTypeId.NORMAL,
+    zoomControl: true,
+    zoomControlOptions: {
+      position: naver.maps.Position.RIGHT_CENTER
+    },
+    scaleControl: true,
+    scaleControlOptions:{
+      position: naver.maps.Position.LEFT_CENTER
+    },
+    disableKineticPan: false
+});
+
+var canvas = document.getElementById("cav1");
+var context = canvas.getContext("2d");
+context.fillText("center",100,18);
+context.fillText("left",0,18);
+context.fillText("right",208,18);
+context.fillStyle = "blue";
+context.fillRect(100,0,30,10);
+
+var canvas2 = document.getElementById("cav2");
+var context2 = canvas2.getContext("2d");
+context2.fillText("center",80,18);
+context2.fillText("left",0,18);
+context2.fillText("right",168,18);
+context2.fillStyle = "red";
+context2.fillRect(80,0,30,10);
+
+
+
+
+
+
+$(document).keypress(function(e){
+  var key = e.which;
+  var direction;
+  switch(key){
+    case 119:
+      direction = "w";
+      break;
+    case 97:
+      direction = "a";
+      break;
+    case 100:
+      direction = "d";
+      break;
+    case 115:
+      direction = "s";
+      break;
+    case 113:
+      direction = "q";
+      break;
+    case 101:
+      direction = "e";
+      break;
+    case 116:
+      direction = "t";
+      break;
+    case 105:
+      direction = "i";
+      break;
+    case 103:
+      direction = "g";
+      break;
+    case 112:
+      direction = "p";
+      break;
+    default:
+      break;
+    }
+    $('#text1').val(direction);
+    $('#push').click();
+})
+
+$("#to-1").on("click",function(e){
+  e.preventDefault();
+  map.setZoom(1,true);
+});
+
+
+var infowindow = new naver.maps.InfoWindow();
+
+var marker2 = new naver.maps.Marker({
+  map: map,
+  title: 'marker2',
+  icon: {
+    url: "pin_default.png"
+  }
+});
+
+function onSuccessGeolocation(position) {
+    var location = new naver.maps.LatLng(position.coords.latitude,
+                                         position.coords.longitude);
+
+     $("#to-now").on("click",function(e){
+       map.setCenter(location);
+       map.setZoom(11,true);
+     });
+    var marker = new naver.maps.Marker({
+      position : location,
+      map: map
+    });
+    $("#lat_origin").val(position.coords.latitude);
+    $("#lng_origin").val(position.coords.longitude);
+
+    naver.maps.Event.addListener(map,'click', function(e){
+      $("#lat").val(e.coord.lat());
+      $("#lng").val(e.coord.lng());
+      marker2.setPosition(e.coord);
+      marker2.setAnimation(naver.maps.Animation.BOUNCE)
+      console.log(e.coord.lat()+" "+e.coord.lng());
+    });
+
+    map.setCenter(location); // 얻은 좌표를 지도의 중심으로 설정합니다.
+    map.setZoom(11); // 지도의 줌 레벨을 변경합니다.
+
+    //infowindow.setContent('<div style="padding:20px;">' + 'geolocation.getCurrentPosition() 위치' + '</div>');
+
+    //infowindow.open(map, location);
+    console.log('Coordinates: ' + location.toString());
+}
+
+function onErrorGeolocation() {
+    var center = map.getCenter();
+
+    infowindow.setContent('<div style="padding:20px;">' +
+        '<h5 style="margin-bottom:5px;color:#f00;">Geolocation failed!</h5>'+ "latitude: "+ center.lat() +"<br />longitude: "+ center.lng() +'</div>');
+
+    infowindow.open(map, center);
+}
+
+$(window).on("load", function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(onSuccessGeolocation, onErrorGeolocation);
+    } else {
+        var center = map.getCenter();
+        infowindow.setContent('<div style="padding:20px;"><h5 style="margin-bottom:5px;color:#f00;">Geolocation not supported</h5></div>');
+        infowindow.open(map, center);
+    }
+});
+
+$(document).ready(function(){
+  var vid1 = $("#vid1")[0];
+  var btn1 = $("#btnn1")[0];
+  var btn2 = $("#btnn2")[0];
+
+  $(btn1).click(start);
+  $(btn2).click(end);
+
+  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.oGetUserMedia || navigator.msGetUserMedia;
+  URL = window.URL || window.webkitURL || window.mozURL || window.oURL || window.msURL;
+
+  function start() {
+    navigator.getUserMedia({audio:false, video:true}, gotStream, function(err) { console(err);})
+  }
+  function end(){
+    vid1.pause();
+    vid1.src="";
+    navigator.getUserMedia({audio:false, video:false}, function(err) { console(err);})
+    localstream.getTracks()[0].stop();
+  }
+
+  function gotStream(stream){
+    vid1.src = URL.createObjectURL(stream);
+  }
+});
+
+var op = 0;
+var markers=[];
+var socket = io.connect('localhost:3000');
+socket.on('toclient', function(data){
+  var message = data;
+  console.log("값:"+message);
+  console.log("서버:"+typeof(message));
+  var con = message.substr(0,1);
+  if(con=='g'){
+    var location2 = new naver.maps.LatLng(message.substr(1,9),
+                                         message.substr(10,10));
+    var marker3 = new naver.maps.Marker({
+      position : location2,
+      map: map,
+      icon: {
+        url: "boat.png",
+        size:new naver.maps.Size(40,36),
+        scaledSize : new naver.maps.Size(40,36)
+      }
+    });
+    markers.push(marker3);
+    if(markers.length==2){
+      markers.shift().setMap(null);
+    }
+    map.setCenter(location2);
+    //marker3.setMap(null);
+    $('#return').val(message);
+  }
+  else if(con=='w'){
+    var win = message.substr(1,4);
+    $('#wind').val(win);
+  }
+  else if(con=='t'){
+    var tem = message.substr(1,4);
+    $('#temp').val(tem);
+  }
+  else if(con=='b'){
+    var bat = message.substr(1,4);
+    $('#battery').val(bat);
+  }
+  else if(con=='s'){
+    var sp = message.substr(1,1);
+    if(sp=='0'){
+      $('#speed').attr('high','6');
+      $('#speed').val('7');
+    }
+    else{
+      $('#speed').removeAttr('high');
+      $('#speed').val(sp);
+    }
+    switch(sp){
+      case '0':
+        $('#spd').val("후진");
+        break;
+      case '1':
+        $('#spd').val("정지");
+        break;
+      case '2':
+        $('#spd').val("1단");
+        break;
+      case '3':
+        $('#spd').val("2단");
+        break;
+      case '4':
+        $('#spd').val("3단");
+        break;
+      case '5':
+        $('#spd').val("4단");
+        break;
+      case '6':
+        $('#spd').val("5단");
+        break;
+      default:
+        $('#spd').val("6단");
+        break;
+    }
+
+  }
+  else if(con=='d'){
+    var dir = message.substr(1,2);
+    context.clearRect(0,0,canvas.width,10);
+    context.fillStyle = "bule";
+    switch(dir){
+      case '04':
+        context.fillRect(80,0,30,10);
+        break;
+      case '03':
+        context.fillRect(60,0,30,10);
+        break;
+      case '02':
+        context.fillRect(40,0,30,10);
+        break;
+      case '01':
+        context.fillRect(20,0,30,10);
+        break;
+      case '00':
+        context.fillRect(0,0,30,10);
+        break;
+      case '06':
+        context.fillRect(120,0,30,10);
+        break;
+      case '07':
+        context.fillRect(140,0,30,10);
+        break;
+      case '08':
+        context.fillRect(160,0,30,10);
+        break;
+      case '09':
+        context.fillRect(180,0,30,10);
+        break;
+      case '10':
+        context.fillRect(200,0,30,10);
+        break;
+      default:
+        context.fillRect(100,0,30,10);
+        break;
+    }
+
+  }
+  else if(con==='D'){
+    var dir2 = message.substr(1,1);
+    context2.clearRect(0,0,canvas2.width,10);
+    context2.fillStyle = "red";
+    switch(dir2){
+      case '5':
+        context2.fillRect(60,0,30,10);
+        break;
+      case '6':
+        context2.fillRect(40,0,30,10);
+        break;
+      case '7':
+        context2.fillRect(20,0,30,10);
+        break;
+      case '8':
+        context2.fillRect(0,0,30,10);
+        break;
+      case '3':
+        context2.fillRect(100,0,30,10);
+        break;
+      case '2':
+        context2.fillRect(120,0,30,10);
+        break;
+      case '1':
+        context2.fillRect(140,0,30,10);
+        break;
+      case '0':
+        context2.fillRect(160,0,30,10);
+        break;
+      default:
+        context2.fillRect(80,0,30,10);
+        break;
+    }
+  }
+
+});
+
+//$(document).ready(function(){
+//  $("input:radio[name=radiotxt]").click(function(){
+  //  var temp = $('input[name="radiotxt"]:checked').val();
+  //  $('#return2').val(temp);
+//  })
+//});
+
+</script>
+
+</body>
+</html>
